@@ -26,10 +26,10 @@ Prerequisites: .NET 10 SDK, Aspire CLI, Docker Desktop running (from Phase 2 on)
 |---|---|---|---|
 | 1.1 | Remove starter samples | `feature/skeleton-cleanup` | AppHost, Web, sln |
 | 1.2 | Create three API projects + wire AppHost | `feature/skeleton-services` | Catalog.Api, Ordering.Api, Basket.Api, AppHost |
-| 2.1 | Infra resources: Postgres, pgAdmin, DBs, Redis | `feature/data-infra` | AppHost |
-| 2.2 | Catalog data model + seed | `feature/data-catalog` | Catalog.Api |
-| 2.3 | Ordering data model | `feature/data-ordering` | Ordering.Api |
-| 2.4 | Basket Redis store | `feature/data-basket` | Basket.Api |
+| 2.1 | Infra resources: Postgres, pgAdmin, DBs, Redis + Aspire packages | `feature/data-infra` | AppHost, Catalog.Api, Ordering.Api, Basket.Api (packages only) |
+| 2.2 | Catalog data model + seed | `feature/data-catalog` | Catalog.Api, AppHost |
+| 2.3 | Ordering data model | `feature/data-ordering` | Ordering.Api, AppHost |
+| 2.4 | Basket Redis store | `feature/data-basket` | Basket.Api, AppHost |
 | 3.1 | Catalog.Api endpoints | `feature/catalog-api` | Catalog.Api |
 | 3.2 | Ordering.Api CRUD endpoints | `feature/ordering-api` | Ordering.Api |
 | 3.3 | Basket.Api read + remove endpoints | `feature/basket-api` | Basket.Api |
@@ -81,57 +81,67 @@ Verify
 
 ### 2.1 Infrastructure resources
 **Branch:** `feature/data-infra`
-**Touches:** AppHost
+**Touches:** AppHost; Catalog.Api, Ordering.Api, Basket.Api (csproj package references only)
 
-Tasks
-- **AppHost**: add `Aspire.Hosting.PostgreSQL` and `Aspire.Hosting.Redis` (version = AppHost SDK 13.6.4).
-- `postgres` server (no data volume) `.WithPgAdmin()`; databases `catalogdb`, `orderingdb`; `redis` (no data volume).
-- `catalogapi` `.WithReference(catalogDb).WaitFor(catalogDb)`; `orderingapi` same with `orderingDb`; `basketapi` `.WithReference(redis).WaitFor(redis)`. Matches AppHost block in PROJECT.md §2.
+Infra resources and packages only. No DbContexts, entities, seed, Redis client code, `AddNpgsqlDbContext` / `AddRedisClient` calls, and no `WithReference` / `WaitFor` between APIs and infra; each API wires its own dependency in 2.2–2.4. All Aspire packages use version 13.6.4 (= AppHost SDK).
 
-Verify
+Sub-steps
+- **2.1a Hosting packages.** AppHost: add `Aspire.Hosting.PostgreSQL`, `Aspire.Hosting.Redis`.
+  Verify: build passes.
+- **2.1b Postgres, databases, pgAdmin.** AppHost: `postgres` server (no data volume) `.WithPgAdmin()`; `postgres.AddDatabase("catalogdb")`, `postgres.AddDatabase("orderingdb")`.
+  Verify: build passes; `aspire run` → `postgres`, `pgadmin`, `catalogdb`, `orderingdb` Running/Healthy; pgAdmin opens from dashboard and lists both databases (no tables).
+- **2.1c Redis.** AppHost: `redis` (no data volume).
+  Verify: build passes; `aspire run` → `redis` Running/Healthy; `redis-cli PING` → `PONG`, `KEYS *` empty.
+- **2.1d Client packages.** Catalog.Api, Ordering.Api: `Aspire.Npgsql.EntityFrameworkCore.PostgreSQL`; Basket.Api: `Aspire.StackExchange.Redis`. Package references only, no code.
+  Verify: build 0 errors, 0 new warnings (no NU16xx version warnings).
+
+Verify (whole step)
 - Build passes.
-- `aspire run` → `postgres`, `pgadmin`, `catalogdb`, `orderingdb`, `redis` healthy; APIs start only after their dependency is healthy.
-- pgAdmin opens from dashboard; both databases listed (empty).
-- Restart AppHost → containers recreated, no persisted data (ephemeral).
+- `aspire run` → infra resources above plus `catalogapi`, `orderingapi`, `basketapi`, `webfrontend` all Running/Healthy.
+- Dashboard → API env vars contain no `ConnectionStrings__catalogdb` / `__orderingdb` / `__redis` (no wiring yet).
+- Restart AppHost → containers recreated, no data volumes created, databases empty (ephemeral).
 
 ### 2.2 Catalog data model + seed
 **Branch:** `feature/data-catalog`
-**Touches:** Catalog.Api
+**Touches:** Catalog.Api, AppHost
 
 Tasks
-- **Catalog.Api**: add `Aspire.Npgsql.EntityFrameworkCore.PostgreSQL`; `Product` entity (Id, Name, Description, Price `decimal`); `CatalogDbContext`; register with `AddNpgsqlDbContext<CatalogDbContext>("catalogdb")`.
+- **AppHost**: `catalogapi` `.WithReference(catalogDb).WaitFor(catalogDb)` (PROJECT.md §2).
+- **Catalog.Api** (package added in 2.1): `Product` entity (Id, Name, Description, Price `decimal`); `CatalogDbContext`; register with `AddNpgsqlDbContext<CatalogDbContext>("catalogdb")`.
 - Startup: `EnsureCreated()`, then seed ~6 products if table empty (idempotent).
 
 Verify
 - Build passes.
-- `aspire run` → `catalogapi` healthy; pgAdmin: `catalogdb` has `Products` table with ~6 rows.
+- `aspire run` → `catalogapi` starts only after `catalogdb` is healthy, then healthy; pgAdmin: `catalogdb` has `Products` table with ~6 rows.
 - Restart `catalogapi` only (dashboard) → still ~6 rows (no duplicate seed).
 - Traces/logs: EF Core DB command spans visible for `catalogapi`.
 
 ### 2.3 Ordering data model
 **Branch:** `feature/data-ordering`
-**Touches:** Ordering.Api
+**Touches:** Ordering.Api, AppHost
 
 Tasks
-- **Ordering.Api**: add `Aspire.Npgsql.EntityFrameworkCore.PostgreSQL`; entities `Order` (Id identity, BuyerId, CustomerName, CustomerEmail, CreatedAt `DateTimeOffset` UTC, Total `decimal`, Lines) and `OrderLine` (Id, OrderId FK, ProductId, ProductName, UnitPrice, Quantity); `OrderingDbContext` with cascade from Order to Lines; register with `"orderingdb"`.
+- **AppHost**: `orderingapi` `.WithReference(orderingDb).WaitFor(orderingDb)`.
+- **Ordering.Api** (package added in 2.1): entities `Order` (Id identity, BuyerId, CustomerName, CustomerEmail, CreatedAt `DateTimeOffset` UTC, Total `decimal`, Lines) and `OrderLine` (Id, OrderId FK, ProductId, ProductName, UnitPrice, Quantity); `OrderingDbContext` with cascade from Order to Lines; register with `"orderingdb"`.
 - Startup: `EnsureCreated()`. No seed, no status field.
 
 Verify
 - Build passes.
-- `aspire run` → pgAdmin: `orderingdb` has `Orders` and `OrderLines` tables, FK present, empty.
+- `aspire run` → `orderingapi` starts only after `orderingdb` is healthy; pgAdmin: `orderingdb` has `Orders` and `OrderLines` tables, FK present, empty.
 
 ### 2.4 Basket Redis store
 **Branch:** `feature/data-basket`
-**Touches:** Basket.Api
+**Touches:** Basket.Api, AppHost
 
 Tasks
-- **Basket.Api**: add `Aspire.StackExchange.Redis`; `AddRedisClient("redis")`.
+- **AppHost**: `basketapi` `.WithReference(redis).WaitFor(redis)`.
+- **Basket.Api** (package added in 2.1): `AddRedisClient("redis")`.
 - Models `CustomerBasket { buyerId, items }`, `BasketItem { productId, productName, unitPrice, quantity }`.
 - Basket repository: get / save (key `basket:{buyerId}`, JSON, TTL 30 days reset on every save) / delete.
 
 Verify
 - Build passes.
-- `aspire run` → `basketapi` healthy; Redis health check green in dashboard.
+- `aspire run` → `basketapi` starts only after `redis` is healthy, then healthy; Redis health check green in dashboard.
 - (Repository exercised by endpoints in 3.3; key/TTL checked there.)
 
 ---

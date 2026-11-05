@@ -1,7 +1,12 @@
+using EShopClaude.Basket.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+builder.AddRedisClient("redis");
+
+builder.Services.AddSingleton<BasketRepository>();
 
 builder.Services.AddProblemDetails();
 

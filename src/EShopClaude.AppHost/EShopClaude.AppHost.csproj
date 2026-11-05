@@ -16,4 +16,9 @@
     <ProjectReference Include="..\EShopClaude.Web\EShopClaude.Web.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="13.6.4" />
+    <PackageReference Include="Aspire.Hosting.Redis" Version="13.6.4" />
+  </ItemGroup>
+
 </Project>
