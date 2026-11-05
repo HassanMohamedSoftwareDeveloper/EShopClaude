@@ -1,0 +1,7 @@
+@host = http://localhost:5101
+
+### Service status
+GET {{host}}/
+
+### OpenAPI document (Development only)
+GET {{host}}/openapi/v1.json
