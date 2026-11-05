@@ -1,7 +1,10 @@
+using EShopClaude.Catalog.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+builder.AddNpgsqlDbContext<CatalogDbContext>("catalogdb");
 
 builder.Services.AddProblemDetails();
 
@@ -9,6 +12,8 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+await app.InitializeCatalogDbAsync();
 
 app.UseExceptionHandler();
 
@@ -24,4 +29,4 @@ var api = app.MapGroup("/api");
 
 app.MapDefaultEndpoints();
 
-app.Run();
+await app.RunAsync();
