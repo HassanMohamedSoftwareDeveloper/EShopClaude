@@ -1,5 +1,6 @@
 using EShopClaude.Catalog.Api;
 using EShopClaude.Catalog.Api.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -42,6 +43,17 @@ api.MapGet("/products", async (CatalogDbContext db, CancellationToken ct) =>
             .Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Price))
             .ToListAsync(ct))
     .WithName("ListProducts");
+
+// One product by id, or 404 (PROJECT.md §3.1). Basket.Api snapshots name + price from this.
+api.MapGet("/products/{id:int}", async Task<Results<Ok<ProductDto>, NotFound>> (int id, CatalogDbContext db, CancellationToken ct) =>
+        await db.Products
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Price))
+            .FirstOrDefaultAsync(ct) is { } product
+            ? TypedResults.Ok(product)
+            : TypedResults.NotFound())
+    .WithName("GetProduct");
 
 app.MapDefaultEndpoints();
 
