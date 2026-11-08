@@ -12,6 +12,12 @@ Minimal distributed e-commerce demo on .NET 10 + Aspire (AppHost SDK 13.6.4), bu
 
 Read the relevant step in PLAN.md before you start work. Section 10 of PROJECT.md lists deliberately excluded features (shared contracts library, EF migrations, data volumes, message broker, custom retries, unit tests, etc.). Don't add any of them.
 
+## Way of working
+
+The spec-driven delivery rules (branches, merges, spec layout, the per-spec cycle and session hygiene) live in this file:
+
+@_agenticdev/WOW.md
+
 ## Commands
 
 The solution lives in `src/`. Docker Desktop must be running once infra exists (Phase 2+).
