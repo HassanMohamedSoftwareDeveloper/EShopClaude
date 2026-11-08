@@ -1,6 +1,6 @@
 # Catalog.Api 03 — List products
 
-**Status:** In progress
+**Status:** Done
 
 ## Goal
 
