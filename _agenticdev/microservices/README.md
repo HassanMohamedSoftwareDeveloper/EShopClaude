@@ -6,7 +6,7 @@ One spec = one sub-feature = one feature branch. The process is in [WOW.md](../W
 |---|---|---|---|---|
 | catalog-api | [01 — Persistence](catalog-api/01-persistence.md) | `feature/catalog-01-persistence` | nothing | Done |
 | catalog-api | [02 — Seed products](catalog-api/02-seed-products.md) | `feature/catalog-02-seed-products` | catalog-01 | Done |
-| catalog-api | [03 — List products](catalog-api/03-list-products.md) | `feature/catalog-03-list-products` | catalog-02 | Not started |
+| catalog-api | [03 — List products](catalog-api/03-list-products.md) | `feature/catalog-03-list-products` | catalog-02 | In progress |
 | catalog-api | [04 — Get product by id](catalog-api/04-get-product.md) | `feature/catalog-04-get-product` | catalog-03 | Not started |
 | ordering-api | [01 — Persistence](ordering-api/01-persistence.md) | `feature/ordering-01-persistence` | nothing | Not started |
 | ordering-api | [02 — Create order](ordering-api/02-create-order.md) | `feature/ordering-02-create-order` | ordering-01 | Not started |
