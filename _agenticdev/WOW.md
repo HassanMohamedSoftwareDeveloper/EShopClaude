@@ -24,11 +24,12 @@ _agenticdev/
     README.md                       # status table for all specs
     <service>/NN-<short-name>.md    # one file per spec
 ```
-- `NN` is numbered per service (`01`, `02`, …).
-- Numbers are never reused or renumbered, even if a spec is dropped.
+- `NN` is numbered per service in build order (`01`, `02`, …).
+- Once a spec is merged, its number never changes. Numbers are never reused, even if a spec is dropped.
 - Every spec follows `templates/spec-template.md`.
 - New spec: copy [templates/spec-template.md](templates/spec-template.md) to `microservices/<service>/NN-<short-name>.md` and fill every section.
-- `microservices/README.md` holds the status table for every spec.
+- Definition of Done lists checks anyone can run: the exact command or request and its expected result (e.g. `GET /api/products/999` → `404`). "It works" is not a check.
+- `microservices/README.md` holds the status table for every spec. It is updated in the same change that adds, splits or renames a spec.
 
 ## The cycle, per spec
 1. **Pick** the next spec: lowest-numbered not-Done spec whose dependencies are all merged.

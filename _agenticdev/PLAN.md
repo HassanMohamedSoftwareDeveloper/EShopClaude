@@ -7,6 +7,7 @@ Source of truth: [PROJECT.md](PROJECT.md). This plan orders the work; PROJECT.md
 - A step is done only when every item in its **Verify** list passes. Merge, then start the next step.
 - Steps are sequential; later steps assume earlier ones are merged.
 - Tasks are grouped by project so each change has a clear owner.
+- Exception: the microservice steps (3.1, 3.2, 4.2) are spec backlogs. Each spec is its own branch and merge, per [WOW.md](WOW.md); the spec files hold the tasks and Definition of Done, and [microservices/README.md](microservices/README.md) holds dependencies and status.
 
 ## Verification toolkit
 | Check | How |
@@ -27,15 +28,10 @@ Prerequisites: .NET 10 SDK, Aspire CLI, Docker Desktop running (from Phase 2 on)
 | 1.1 | Remove starter samples | `feature/skeleton-cleanup` | AppHost, Web, sln |
 | 1.2 | Create three API projects + wire AppHost | `feature/skeleton-services` | Catalog.Api, Ordering.Api, Basket.Api, AppHost |
 | 2.1 | Infra resources: Postgres, pgAdmin, DBs, Redis | `feature/data-infra` | AppHost (+ API csproj packages) |
-| 2.2 | Catalog data model + seed | `feature/data-catalog` | Catalog.Api |
-| 2.3 | Ordering data model | `feature/data-ordering` | Ordering.Api |
-| 2.4 | Basket Redis store | `feature/data-basket` | Basket.Api |
-| 3.1 | Catalog.Api endpoints | `feature/catalog-api` | Catalog.Api |
-| 3.2 | Ordering.Api CRUD endpoints | `feature/ordering-api` | Ordering.Api |
-| 3.3 | Basket.Api read + remove endpoints | `feature/basket-api` | Basket.Api |
+| 3.1 | Catalog.Api spec backlog | `feature/catalog-NN-<short-name>` | Catalog.Api, AppHost |
+| 3.2 | Ordering.Api spec backlog | `feature/ordering-NN-<short-name>` | Ordering.Api, AppHost |
 | 4.1 | Resilience: no retries on unsafe methods | `feature/resilience-unsafe-methods` | ServiceDefaults |
-| 4.2 | Basket → Catalog: add item | `feature/basket-add-item` | Basket.Api |
-| 4.3 | Basket → Ordering: checkout | `feature/basket-checkout` | Basket.Api |
+| 4.2 | Basket.Api spec backlog | `feature/basket-NN-<short-name>` | Basket.Api, AppHost |
 | 5.1 | Storefront foundation: clients, CartState, nav | `feature/web-foundation` | Web |
 | 5.2 | Products page `/` | `feature/web-products` | Web |
 | 5.3 | Cart page `/cart` | `feature/web-cart` | Web |
@@ -101,99 +97,29 @@ Verify
 - Redis: `redis-cli PING` → `PONG`, `DBSIZE` → `0`.
 - Restart AppHost → containers recreated, no volumes, no persisted data (ephemeral).
 
-### 2.2 Catalog data model + seed
-**Branch:** `feature/data-catalog`
-**Touches:** Catalog.Api, AppHost
-
-Tasks
-- **AppHost**: `catalogapi` `.WithReference(catalogDb).WaitFor(catalogDb)`.
-- **Catalog.Api**: `Product` entity (Id, Name, Description, Price `decimal`); `CatalogDbContext`; register with `AddNpgsqlDbContext<CatalogDbContext>("catalogdb")`.
-- Startup: `EnsureCreated()`, then seed ~6 products if table empty (idempotent).
-
-Verify
-- Build passes.
-- `aspire run` → `catalogapi` starts only after `catalogdb` is healthy.
-- `aspire run` → `catalogapi` healthy; pgAdmin: `catalogdb` has `Products` table with ~6 rows.
-- Restart `catalogapi` only (dashboard) → still ~6 rows (no duplicate seed).
-- Traces/logs: EF Core DB command spans visible for `catalogapi`.
-
-### 2.3 Ordering data model
-**Branch:** `feature/data-ordering`
-**Touches:** Ordering.Api, AppHost
-
-Tasks
-- **AppHost**: `orderingapi` `.WithReference(orderingDb).WaitFor(orderingDb)`.
-- **Ordering.Api**: entities `Order` (Id identity, BuyerId, CustomerName, CustomerEmail, CreatedAt `DateTimeOffset` UTC, Total `decimal`, Lines) and `OrderLine` (Id, OrderId FK, ProductId, ProductName, UnitPrice, Quantity); `OrderingDbContext` with cascade from Order to Lines; register with `"orderingdb"`.
-- Startup: `EnsureCreated()`. No seed, no status field.
-
-Verify
-- Build passes.
-- `aspire run` → `orderingapi` starts only after `orderingdb` is healthy.
-- `aspire run` → pgAdmin: `orderingdb` has `Orders` and `OrderLines` tables, FK present, empty.
-
-### 2.4 Basket Redis store
-**Branch:** `feature/data-basket`
-**Touches:** Basket.Api, AppHost
-
-Tasks
-- **AppHost**: `basketapi` `.WithReference(redis).WaitFor(redis)`.
-- **Basket.Api**: `AddRedisClient("redis")`.
-- Models `CustomerBasket { buyerId, items }`, `BasketItem { productId, productName, unitPrice, quantity }`.
-- Basket repository: get / save (key `basket:{buyerId}`, JSON, TTL 30 days reset on every save) / delete.
-
-Verify
-- Build passes.
-- `aspire run` → `basketapi` starts only after `redis` is healthy.
-- `aspire run` → `basketapi` healthy; Redis health check green in dashboard.
-- (Repository exercised by endpoints in 3.3; key/TTL checked there.)
-
 ---
 
 ## Phase 3 — Microservices
 
-### 3.1 Catalog.Api endpoints
-**Branch:** `feature/catalog-api`
-**Touches:** Catalog.Api
+Each service is built as a backlog of small specs, in file-number order. The spec files are the source of truth for tasks and Definition of Done.
 
-Tasks
-- **Catalog.Api**: `ProductDto { id, name, description, price }`; `GET /api/products` (ordered by Id) and `GET /api/products/{id}` (200 / 404). No write endpoints.
-- `.http` file: list, get existing id, get missing id.
+### 3.1 Catalog.Api
+**Owns:** `catalogdb` and the read-only product catalog (list, get by id), seeded on startup.
+**Specs:** [microservices/catalog-api/](microservices/catalog-api/)
+- `01-persistence.md`
+- `02-seed-products.md`
+- `03-list-products.md`
+- `04-get-product.md`
 
-Verify
-- Build passes.
-- HTTP: list → 200 with ~6 items ordered by id; `/api/products/1` → 200; `/api/products/999` → 404.
-- OpenAPI doc lists both routes.
-- Traces: request span → EF query span, no errors.
-
-### 3.2 Ordering.Api CRUD endpoints
-**Branch:** `feature/ordering-api`
-**Touches:** Ordering.Api
-
-Tasks
-- **Ordering.Api**: own records `OrderRequest { buyerId, customerName, customerEmail, items[] }`, `OrderDto` (id, buyerId, customerName, customerEmail, createdAt, total, lines).
-- `GET /api/orders` (ordered by Id), `GET /api/orders/{id}` (200/404), `POST /api/orders` (201 + `Location: /api/orders/{id}`, `CreatedAt` = UTC now, `Total` = Σ unitPrice × quantity), `PUT /api/orders/{id}` (replace customer data + lines, recompute Total; 200/404), `DELETE /api/orders/{id}` (204/404).
-- Trusts caller: no Catalog call, no validation beyond model binding.
-- `.http` file covering all five operations plus 404 cases.
-
-Verify
-- Build passes.
-- HTTP: POST → 201 with Location and correct Total; GET by id matches; list contains it; PUT changes lines and Total; DELETE → 204, then GET → 404; PUT/DELETE on missing id → 404.
-- pgAdmin: rows in `Orders`/`OrderLines` match; lines removed after DELETE.
-
-### 3.3 Basket.Api read + remove endpoints
-**Branch:** `feature/basket-api`
-**Touches:** Basket.Api
-
-Tasks
-- **Basket.Api**: `BasketDto { buyerId, items, total }` with `total` computed on read.
-- `GET /api/basket/{buyerId}` → 200, empty items when key missing.
-- `DELETE /api/basket/{buyerId}/items/{productId}` → drop line (no-op if absent), save, 200 BasketDto.
-- `.http` file: get empty basket, remove from empty basket (add/checkout requests added in 4.2/4.3).
-
-Verify
-- Build passes.
-- HTTP: GET unknown buyer → 200 `{ items: [], total: 0 }`; DELETE on empty basket → 200 empty.
-- Redis: after DELETE on empty basket, key `basket:{buyerId}` exists with `TTL` ≈ 2592000 s (write path + TTL proven).
+### 3.2 Ordering.Api
+**Owns:** `orderingdb` and plain CRUD over orders. Trusts its caller; makes no outgoing calls.
+**Specs:** [microservices/ordering-api/](microservices/ordering-api/)
+- `01-persistence.md`
+- `02-create-order.md`
+- `03-get-order.md`
+- `04-list-orders.md`
+- `05-update-order.md`
+- `06-delete-order.md`
 
 ---
 
@@ -208,37 +134,16 @@ Tasks
 
 Verify
 - Build passes; `aspire run` → all resources healthy.
-- (Behaviour observed in 4.3: a failing POST to Ordering shows a single attempt in traces.)
+- (Behaviour observed in basket-api `05-checkout.md`: a failing POST to Ordering shows a single attempt in traces.)
 
-### 4.2 Basket → Catalog: add item
-**Branch:** `feature/basket-add-item`
-**Touches:** Basket.Api
-
-Tasks
-- **Basket.Api**: typed `CatalogClient` (`https+http://catalogapi`) with its own `ProductDto` record; `GetProduct(id)` returning null on 404.
-- `POST /api/basket/{buyerId}/items` `{ productId, quantity }`: `quantity < 1` → 400; product 404 → 400; existing line → `quantity += n` keeping original snapshot; else append line with Catalog name + price; save with TTL; 200 BasketDto.
-- `.http`: add valid product, add same again, add missing product, add qty 0.
-
-Verify
-- Build passes.
-- HTTP: add id 1 qty 2 → line qty 2, total = price × 2; add id 1 qty 1 → qty 3; add id 999 → 400; qty 0 → 400; remove id 1 → empty.
-- Redis: `basket:{buyerId}` JSON holds snapshot name/price.
-- Traces: `basketapi POST …/items` span with child `GET catalogapi /api/products/{id}`.
-
-### 4.3 Basket → Ordering: checkout
-**Branch:** `feature/basket-checkout`
-**Touches:** Basket.Api
-
-Tasks
-- **Basket.Api**: typed `OrderingClient` (`https+http://orderingapi`) with its own `OrderRequest`/response records.
-- `POST /api/basket/{buyerId}/checkout` `{ customerName, customerEmail }`: missing/empty basket → 400; `POST orderingapi /api/orders` with items copied from snapshot; non-success → exception → 500, basket untouched; on 201 delete basket; return `201 { orderId }`.
-- `.http`: checkout empty basket, add + checkout happy path.
-
-Verify
-- Build passes.
-- HTTP: checkout empty → 400; add items then checkout → 201 `{ orderId }`; `GET orderingapi /api/orders/{orderId}` → lines/prices match basket snapshot, Total correct; `GET basket` → empty; Redis key gone.
-- Failure path: stop `orderingapi` in dashboard, checkout → 500, basket still present in Redis, trace shows exactly one POST attempt (4.1 working). Restart `orderingapi`.
-- Traces: one trace `basketapi checkout` → `POST orderingapi /api/orders` → EF insert.
+### 4.2 Basket.Api
+**Owns:** Redis baskets (`basket:{buyerId}`, 30-day TTL) and checkout orchestration. Calls Catalog on add item and Ordering on checkout.
+**Specs:** [microservices/basket-api/](microservices/basket-api/)
+- `01-redis-connection.md`
+- `02-get-basket.md`
+- `03-remove-item.md`
+- `04-add-item.md`
+- `05-checkout.md` (runs after 4.1)
 
 ---
 
