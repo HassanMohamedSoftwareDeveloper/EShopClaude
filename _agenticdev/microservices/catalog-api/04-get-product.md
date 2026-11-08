@@ -1,6 +1,6 @@
 # Catalog.Api 04 — Get product by id
 
-**Status:** In progress
+**Status:** Done
 
 ## Goal
 
