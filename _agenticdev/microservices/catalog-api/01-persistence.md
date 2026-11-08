@@ -1,6 +1,6 @@
 # Catalog.Api 01 — Persistence
 
-**Status:** Not started
+**Status:** Done
 
 ## Goal
 
