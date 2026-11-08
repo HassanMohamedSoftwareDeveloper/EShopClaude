@@ -8,7 +8,9 @@ var orderingDb = postgres.AddDatabase("orderingdb");
 var redis = builder.AddRedis("redis");
 
 var catalogApi = builder.AddProject<Projects.EShopClaude_Catalog_Api>("catalogapi")
-    .WithHttpHealthCheck("/health");
+    .WithHttpHealthCheck("/health")
+    .WithReference(catalogDb)
+    .WaitFor(catalogDb);
 
 var orderingApi = builder.AddProject<Projects.EShopClaude_Ordering_Api>("orderingapi")
     .WithHttpHealthCheck("/health");
