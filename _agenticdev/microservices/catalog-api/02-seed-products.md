@@ -1,6 +1,6 @@
 # Catalog.Api 02 — Seed products
 
-**Status:** In progress
+**Status:** Done
 
 ## Goal
 
