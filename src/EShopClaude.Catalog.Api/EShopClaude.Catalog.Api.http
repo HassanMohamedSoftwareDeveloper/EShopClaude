@@ -8,3 +8,9 @@ GET {{host}}/openapi/v1.json
 
 ### List products
 GET {{host}}/api/products
+
+### Get product (existing)
+GET {{host}}/api/products/1
+
+### Get product (missing → 404)
+GET {{host}}/api/products/999
