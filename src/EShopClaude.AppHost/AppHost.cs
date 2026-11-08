@@ -1,5 +1,12 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+// Infrastructure. No data volumes: every run starts clean.
+var postgres = builder.AddPostgres("postgres")
+    .WithPgAdmin();
+var catalogDb = postgres.AddDatabase("catalogdb");
+var orderingDb = postgres.AddDatabase("orderingdb");
+var redis = builder.AddRedis("redis");
+
 var catalogApi = builder.AddProject<Projects.EShopClaude_Catalog_Api>("catalogapi")
     .WithHttpHealthCheck("/health");
 
