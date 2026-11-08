@@ -1,4 +1,6 @@
+using EShopClaude.Catalog.Api;
 using EShopClaude.Catalog.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,8 +32,16 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "Catalog API is running.");
 
-// Catalog endpoints are added to this group in Phase 3.
 var api = app.MapGroup("/api");
+
+// Every product, ordered by Id (PROJECT.md §3.1).
+api.MapGet("/products", async (CatalogDbContext db, CancellationToken ct) =>
+        await db.Products
+            .AsNoTracking()
+            .OrderBy(p => p.Id)
+            .Select(p => new ProductDto(p.Id, p.Name, p.Description, p.Price))
+            .ToListAsync(ct))
+    .WithName("ListProducts");
 
 app.MapDefaultEndpoints();
 
