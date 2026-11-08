@@ -13,11 +13,12 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Create the schema before serving requests. No migrations (PROJECT.md §2).
+// Create the schema and seed it before serving requests. No migrations (PROJECT.md §2).
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<CatalogDbContext>();
     await db.Database.EnsureCreatedAsync();
+    await CatalogSeed.SeedAsync(db);
 }
 
 app.UseExceptionHandler();
