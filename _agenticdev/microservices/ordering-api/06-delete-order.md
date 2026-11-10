@@ -1,6 +1,6 @@
 # Ordering.Api 06 — Delete order
 
-**Status:** Not started
+**Status:** Done (4640916b956c80870193c99560a80727a94425de)
 
 ## Goal
 
