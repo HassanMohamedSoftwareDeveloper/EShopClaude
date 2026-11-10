@@ -19,3 +19,10 @@ Content-Type: application/json
     { "productId": 6, "productName": "Backpack", "unitPrice": 59.00, "quantity": 1 }
   ]
 }
+
+### Get order (created)
+# id 1 = first Create order on a fresh run; use the id from its Location header
+GET {{host}}/api/orders/1
+
+### Get order (missing → 404)
+GET {{host}}/api/orders/999
