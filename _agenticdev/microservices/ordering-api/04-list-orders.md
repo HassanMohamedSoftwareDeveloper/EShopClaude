@@ -1,6 +1,6 @@
 # Ordering.Api 04 — List orders
 
-**Status:** Not started
+**Status:** Done (ec49e2add4b2232e67880a2ad8f5e8a5d47090a9)
 
 ## Goal
 
