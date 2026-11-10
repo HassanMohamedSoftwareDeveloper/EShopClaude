@@ -5,3 +5,17 @@ GET {{host}}/
 
 ### OpenAPI document (Development only)
 GET {{host}}/openapi/v1.json
+
+### Create order
+POST {{host}}/api/orders
+Content-Type: application/json
+
+{
+  "buyerId": "dod-buyer",
+  "customerName": "Ada Lovelace",
+  "customerEmail": "ada@example.com",
+  "items": [
+    { "productId": 1, "productName": "Classic T-Shirt", "unitPrice": 19.99, "quantity": 2 },
+    { "productId": 6, "productName": "Backpack", "unitPrice": 59.00, "quantity": 1 }
+  ]
+}
