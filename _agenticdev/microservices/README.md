@@ -10,7 +10,7 @@ One spec = one sub-feature = one feature branch. The process is in [WOW.md](../W
 | catalog-api | [04 — Get product by id](catalog-api/04-get-product.md) | `feature/catalog-04-get-product` | catalog-03 | Done |
 | ordering-api | [01 — Persistence](ordering-api/01-persistence.md) | `feature/ordering-01-persistence` | nothing | Done (e9070b9b1553179c87b779386d8d9b8c7d562ba7) |
 | ordering-api | [02 — Create order](ordering-api/02-create-order.md) | `feature/ordering-02-create-order` | ordering-01 | Done (1f4f50695ed6ea49e0185cc27fa79c53c4569195) |
-| ordering-api | [03 — Get order by id](ordering-api/03-get-order.md) | `feature/ordering-03-get-order` | ordering-02 | Not started |
+| ordering-api | [03 — Get order by id](ordering-api/03-get-order.md) | `feature/ordering-03-get-order` | ordering-02 | Done (aad5533b8e6e25641389b27804bbbf41b9290e04) |
 | ordering-api | [04 — List orders](ordering-api/04-list-orders.md) | `feature/ordering-04-list-orders` | ordering-02 | Not started |
 | ordering-api | [05 — Update order](ordering-api/05-update-order.md) | `feature/ordering-05-update-order` | ordering-03 | Not started |
 | ordering-api | [06 — Delete order](ordering-api/06-delete-order.md) | `feature/ordering-06-delete-order` | ordering-03 | Not started |

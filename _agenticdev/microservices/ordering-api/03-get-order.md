@@ -1,6 +1,6 @@
 # Ordering.Api 03 — Get order by id
 
-**Status:** Not started
+**Status:** Done (aad5533b8e6e25641389b27804bbbf41b9290e04)
 
 ## Goal
 
