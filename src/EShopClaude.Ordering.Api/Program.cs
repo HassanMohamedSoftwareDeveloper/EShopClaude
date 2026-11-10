@@ -60,6 +60,19 @@ api.MapPost("/orders", async Task<Created<OrderDto>> (OrderRequest request, Orde
     })
     .WithName("CreateOrder");
 
+// Every order with its lines, ordered by Id (PROJECT.md §3.3). CRUD completeness; no storefront page uses it.
+api.MapGet("/orders", async Task<Ok<List<OrderDto>>> (OrderingDbContext db, CancellationToken ct) =>
+    {
+        var orders = await db.Orders
+            .AsNoTracking()
+            .Include(o => o.Lines.OrderBy(l => l.Id))
+            .OrderBy(o => o.Id)
+            .ToListAsync(ct);
+
+        return TypedResults.Ok(orders.ConvertAll(OrderDto.From));
+    })
+    .WithName("ListOrders");
+
 // One order with its lines, or 404 (PROJECT.md §3.3). The storefront order page reads this.
 api.MapGet("/orders/{id:int}", async Task<Results<Ok<OrderDto>, NotFound>> (int id, OrderingDbContext db, CancellationToken ct) =>
         await db.Orders
