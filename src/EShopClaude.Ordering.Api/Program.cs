@@ -83,6 +83,37 @@ api.MapGet("/orders/{id:int}", async Task<Results<Ok<OrderDto>, NotFound>> (int 
             : TypedResults.NotFound())
     .WithName("GetOrder");
 
+// Replace customer data and lines, recompute Total; Id and CreatedAt are kept (PROJECT.md §3.3). CRUD completeness; no storefront page uses it.
+api.MapPut("/orders/{id:int}", async Task<Results<Ok<OrderDto>, NotFound>> (int id, OrderRequest request, OrderingDbContext db, CancellationToken ct) =>
+    {
+        // Tracked: the old lines become orphans of a required FK, so SaveChangesAsync deletes them.
+        var order = await db.Orders
+            .Include(o => o.Lines)
+            .FirstOrDefaultAsync(o => o.Id == id, ct);
+
+        if (order is null)
+        {
+            return TypedResults.NotFound();
+        }
+
+        order.BuyerId = request.BuyerId;
+        order.CustomerName = request.CustomerName;
+        order.CustomerEmail = request.CustomerEmail;
+        order.Total = request.Items.Sum(i => i.UnitPrice * i.Quantity);
+        order.Lines = [.. request.Items.Select(i => new OrderLine
+        {
+            ProductId = i.ProductId,
+            ProductName = i.ProductName,
+            UnitPrice = i.UnitPrice,
+            Quantity = i.Quantity,
+        })];
+
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Ok(OrderDto.From(order));
+    })
+    .WithName("UpdateOrder");
+
 app.MapDefaultEndpoints();
 
 app.Run();

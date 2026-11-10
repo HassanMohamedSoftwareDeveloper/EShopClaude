@@ -30,3 +30,30 @@ GET {{host}}/api/orders/1
 
 ### Get order (missing → 404)
 GET {{host}}/api/orders/999
+
+### Update order (created)
+# id 1 = first Create order on a fresh run; replaces buyer, customer and lines, recomputes total, keeps createdAt
+PUT {{host}}/api/orders/1
+Content-Type: application/json
+
+{
+  "buyerId": "dod-buyer-3",
+  "customerName": "Grace Hopper",
+  "customerEmail": "grace@example.com",
+  "items": [
+    { "productId": 3, "productName": "Coffee Mug", "unitPrice": 12.50, "quantity": 3 }
+  ]
+}
+
+### Update order (missing → 404)
+PUT {{host}}/api/orders/999
+Content-Type: application/json
+
+{
+  "buyerId": "dod-buyer-3",
+  "customerName": "Grace Hopper",
+  "customerEmail": "grace@example.com",
+  "items": [
+    { "productId": 3, "productName": "Coffee Mug", "unitPrice": 12.50, "quantity": 3 }
+  ]
+}
