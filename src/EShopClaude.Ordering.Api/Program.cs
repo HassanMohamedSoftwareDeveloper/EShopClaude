@@ -1,6 +1,7 @@
 using EShopClaude.Ordering.Api;
 using EShopClaude.Ordering.Api.Data;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -58,6 +59,16 @@ api.MapPost("/orders", async Task<Created<OrderDto>> (OrderRequest request, Orde
         return TypedResults.Created($"/api/orders/{order.Id}", OrderDto.From(order));
     })
     .WithName("CreateOrder");
+
+// One order with its lines, or 404 (PROJECT.md §3.3). The storefront order page reads this.
+api.MapGet("/orders/{id:int}", async Task<Results<Ok<OrderDto>, NotFound>> (int id, OrderingDbContext db, CancellationToken ct) =>
+        await db.Orders
+            .AsNoTracking()
+            .Include(o => o.Lines.OrderBy(l => l.Id))
+            .FirstOrDefaultAsync(o => o.Id == id, ct) is { } order
+            ? TypedResults.Ok(OrderDto.From(order))
+            : TypedResults.NotFound())
+    .WithName("GetOrder");
 
 app.MapDefaultEndpoints();
 
