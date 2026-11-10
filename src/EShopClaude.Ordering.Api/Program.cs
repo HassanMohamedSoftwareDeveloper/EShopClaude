@@ -1,4 +1,6 @@
+using EShopClaude.Ordering.Api;
 using EShopClaude.Ordering.Api.Data;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +31,33 @@ if (app.Environment.IsDevelopment())
 
 app.MapGet("/", () => "Ordering API is running.");
 
-// Ordering endpoints are added to this group in Phase 3.
 var api = app.MapGroup("/api");
+
+// Store an order as sent; Ordering computes Total and trusts its caller (PROJECT.md §3.3).
+api.MapPost("/orders", async Task<Created<OrderDto>> (OrderRequest request, OrderingDbContext db, CancellationToken ct) =>
+    {
+        var order = new Order
+        {
+            BuyerId = request.BuyerId,
+            CustomerName = request.CustomerName,
+            CustomerEmail = request.CustomerEmail,
+            CreatedAt = DateTimeOffset.UtcNow,
+            Total = request.Items.Sum(i => i.UnitPrice * i.Quantity),
+            Lines = [.. request.Items.Select(i => new OrderLine
+            {
+                ProductId = i.ProductId,
+                ProductName = i.ProductName,
+                UnitPrice = i.UnitPrice,
+                Quantity = i.Quantity,
+            })],
+        };
+
+        db.Orders.Add(order);
+        await db.SaveChangesAsync(ct);
+
+        return TypedResults.Created($"/api/orders/{order.Id}", OrderDto.From(order));
+    })
+    .WithName("CreateOrder");
 
 app.MapDefaultEndpoints();
 
