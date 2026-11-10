@@ -1,7 +1,10 @@
+using EShopClaude.Ordering.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+builder.AddNpgsqlDbContext<OrderingDbContext>("orderingdb");
 
 builder.Services.AddProblemDetails();
 
