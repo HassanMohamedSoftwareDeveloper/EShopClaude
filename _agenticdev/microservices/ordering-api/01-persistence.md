@@ -1,6 +1,6 @@
 # Ordering.Api 01 — Persistence
 
-**Status:** Not started
+**Status:** Done (e9070b9b1553179c87b779386d8d9b8c7d562ba7)
 
 ## Goal
 
