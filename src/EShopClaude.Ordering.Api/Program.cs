@@ -1,7 +1,10 @@
+using EShopClaude.Ordering.Api.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add service defaults & Aspire client integrations.
 builder.AddServiceDefaults();
+builder.AddNpgsqlDbContext<OrderingDbContext>("orderingdb");
 
 builder.Services.AddProblemDetails();
 
@@ -9,6 +12,13 @@ builder.Services.AddProblemDetails();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
+
+// Create the schema before serving requests. No migrations (PROJECT.md §2).
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
 
 app.UseExceptionHandler();
 

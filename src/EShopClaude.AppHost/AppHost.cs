@@ -13,7 +13,9 @@ var catalogApi = builder.AddProject<Projects.EShopClaude_Catalog_Api>("catalogap
     .WaitFor(catalogDb);
 
 var orderingApi = builder.AddProject<Projects.EShopClaude_Ordering_Api>("orderingapi")
-    .WithHttpHealthCheck("/health");
+    .WithHttpHealthCheck("/health")
+    .WithReference(orderingDb)
+    .WaitFor(orderingDb);
 
 var basketApi = builder.AddProject<Projects.EShopClaude_Basket_Api>("basketapi")
     .WithHttpHealthCheck("/health")
