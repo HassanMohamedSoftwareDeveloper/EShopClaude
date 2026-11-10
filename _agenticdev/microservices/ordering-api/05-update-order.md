@@ -1,6 +1,6 @@
 # Ordering.Api 05 — Update order
 
-**Status:** Not started
+**Status:** Done (6e42690ba6caa578b04b240a6ff5f41adf14f8ab)
 
 ## Goal
 
