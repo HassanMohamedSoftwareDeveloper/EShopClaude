@@ -1,6 +1,6 @@
 # Ordering.Api 02 — Create order
 
-**Status:** Not started
+**Status:** Done (1f4f50695ed6ea49e0185cc27fa79c53c4569195)
 
 ## Goal
 
