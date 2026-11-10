@@ -20,6 +20,10 @@ Content-Type: application/json
   ]
 }
 
+### List orders
+# [] on a fresh run; every created order, ascending id, with lines
+GET {{host}}/api/orders
+
 ### Get order (created)
 # id 1 = first Create order on a fresh run; use the id from its Location header
 GET {{host}}/api/orders/1
