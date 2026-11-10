@@ -13,6 +13,13 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+// Create the schema before serving requests. No migrations (PROJECT.md §2).
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<OrderingDbContext>();
+    await db.Database.EnsureCreatedAsync();
+}
+
 app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
