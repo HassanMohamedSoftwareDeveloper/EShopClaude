@@ -114,6 +114,15 @@ api.MapPut("/orders/{id:int}", async Task<Results<Ok<OrderDto>, NotFound>> (int 
     })
     .WithName("UpdateOrder");
 
+// Delete an order; Postgres ON DELETE CASCADE removes its lines (PROJECT.md §3.3). CRUD completeness; no storefront page uses it.
+api.MapDelete("/orders/{id:int}", async Task<Results<NoContent, NotFound>> (int id, OrderingDbContext db, CancellationToken ct) =>
+        await db.Orders
+            .Where(o => o.Id == id)
+            .ExecuteDeleteAsync(ct) > 0
+            ? TypedResults.NoContent()
+            : TypedResults.NotFound())
+    .WithName("DeleteOrder");
+
 app.MapDefaultEndpoints();
 
 app.Run();

@@ -57,3 +57,10 @@ Content-Type: application/json
     { "productId": 3, "productName": "Coffee Mug", "unitPrice": 12.50, "quantity": 3 }
   ]
 }
+
+### Delete order (created)
+# id 1 = first Create order on a fresh run; 204, lines removed by cascade; run again → 404
+DELETE {{host}}/api/orders/1
+
+### Delete order (missing → 404)
+DELETE {{host}}/api/orders/999

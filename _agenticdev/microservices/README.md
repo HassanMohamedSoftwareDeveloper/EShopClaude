@@ -13,7 +13,7 @@ One spec = one sub-feature = one feature branch. The process is in [WOW.md](../W
 | ordering-api | [03 — Get order by id](ordering-api/03-get-order.md) | `feature/ordering-03-get-order` | ordering-02 | Done (aad5533b8e6e25641389b27804bbbf41b9290e04) |
 | ordering-api | [04 — List orders](ordering-api/04-list-orders.md) | `feature/ordering-04-list-orders` | ordering-02 | Done (ec49e2add4b2232e67880a2ad8f5e8a5d47090a9) |
 | ordering-api | [05 — Update order](ordering-api/05-update-order.md) | `feature/ordering-05-update-order` | ordering-03 | Done (6e42690ba6caa578b04b240a6ff5f41adf14f8ab) |
-| ordering-api | [06 — Delete order](ordering-api/06-delete-order.md) | `feature/ordering-06-delete-order` | ordering-03 | Not started |
+| ordering-api | [06 — Delete order](ordering-api/06-delete-order.md) | `feature/ordering-06-delete-order` | ordering-03 | Done (4640916b956c80870193c99560a80727a94425de) |
 | basket-api | [01 — Redis connection](basket-api/01-redis-connection.md) | `feature/basket-01-redis-connection` | nothing | Not started |
 | basket-api | [02 — Get basket](basket-api/02-get-basket.md) | `feature/basket-02-get-basket` | basket-01 | Not started |
 | basket-api | [03 — Remove item](basket-api/03-remove-item.md) | `feature/basket-03-remove-item` | basket-02 | Not started |
